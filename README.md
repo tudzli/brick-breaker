@@ -2,23 +2,23 @@
 
 Um jogo de Brick Breaker (quebra-blocos) feito em Python com a biblioteca pygame.
 
-A bola quica pelas paredes e pelo topo da tela. Voce controla a raquete azul
+A bola quica pelas paredes e pelo topo da tela. Voce controla a o jogador azul
 na parte de baixo e precisa rebater a bola para destruir todos os blocos
-vermelhos. Se a bola passar pela raquete e tocar o fundo da tela, o jogo acaba.
+vermelhos. Se a bola passar pelo jogador e tocar o fundo da tela, o jogo acaba.
 
 ## Como jogar
 
 | Tecla | Acao |
 |---|---|
-| `A` ou seta esquerda | move a raquete para a esquerda |
-| `D` ou seta direita | move a raquete para a direita |
+| `A` ou seta esquerda | move para a esquerda |
+| `D` ou seta direita | move para a direita |
 | `P` ou `Esc` | pausa / continua o jogo |
 
-O jogo comeca pausado: aperte `P` para iniciar.
+O jogo comeca pausado: aperte `P` ou `Esc` para iniciar.
 
 ## Regras
 
-- 8 blocos por linha, 4 linhas: 32 blocos no total.
+- blocos por por linha/coluna variaveis
 - Cada bloco destruido vale 1 ponto, mostrado no canto inferior da tela.
 - Destruir todos os 32 blocos: tela de **VOCE VENCEU**.
 - Deixar a bola cair no fundo da tela: tela de **FIM DE JOGO** com a pontuacao final.
