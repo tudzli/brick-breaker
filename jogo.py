@@ -1,6 +1,5 @@
 import pygame
 
-
 #Inicializar jogo
 pygame.init()
 
@@ -56,16 +55,15 @@ pontuacao = 0
 veloc_bola = [1, -1]
 
 
-
 # criar as funções do jogo_________________________________
-def movimento_jogador(evento):
-    if evento.type == pygame.KEYDOWN:
-        if evento.key == pygame.K_d or evento.key == pygame.K_RIGHT:
-            if (jogador.x + largura_jogador) < tamanho_tela[0]:
-                jogador.x = jogador.x + 1
-        if evento.key == pygame.K_a or evento.key == pygame.K_LEFT:
-            if jogador.x > 0:
-                jogador.x = jogador.x - 1
+def movimento_jogador():
+    teclas = pygame.key.get_pressed()
+    if teclas[pygame.K_d] or teclas[pygame.K_RIGHT]:
+        if (jogador.x + largura_jogador) < tamanho_tela[0]:
+            jogador.x = jogador.x + 1
+    if teclas[pygame.K_a] or teclas[pygame.K_LEFT]:
+        if jogador.x > 0:
+            jogador.x = jogador.x - 1
 
 
 def movimentar_bola(bola):
@@ -86,12 +84,36 @@ def movimentar_bola(bola):
         movimento = None
 
 
-    if jogador.collidepoint(bola.x, bola.y):
-        movimento[1] = movimento[1] * -1
+    if jogador.colliderect(bola) and movimento[1] > 0:
+        bola.bottom = jogador.top
+        movimento[1] = -abs(movimento[1])
+    #angulo
+        batida = (bola.centerx - jogador.centerx) / (largura_jogador / 2)
+        movimento[0] = round(batida * 2)
+
+
     for bloco in blocos:
-        if bloco.collidepoint(bola.x, bola.y):
+        if bloco.colliderect(bola):
             blocos.remove(bloco)
-            movimento[1] = movimento[1] * -1
+            dentro_x = min(bola.right, bloco.right) - max(bola.left, bloco.left)
+            dentro_y = min(bola.bottom, bloco.bottom) - max(bola.top, bloco.top)
+            if dentro_x < dentro_y:
+                if movimento[0] > 0:
+                    #indo pra direita
+                    bola.right = bloco.left
+                else:
+                    #indo pra esquerda
+                    bola.left = bloco.right
+                movimento[0] = movimento[0] * -1
+            else:
+                if movimento[1] < 0:
+                    #subindo
+                    bola.top = bloco.bottom
+                else:
+                    #descendo
+                    bola.bottom = bloco.top
+                movimento[1] = movimento[1] * -1
+            break
 
     return movimento
 
@@ -120,8 +142,23 @@ def desenhar_blocos(blocos):
     for bloco in blocos:
         pygame.draw.rect(tela, cores["vermelho"], bloco)
 
+botao_restart = pygame.Rect(tamanho_tela[0]//2 - 100, 400, 200, 50)
+
+def desenhar_botao_restart():
+    pygame.draw.rect(tela, cores["azul"], botao_restart)
+    fonte_botao = pygame.font.Font(None, 40)
+    texto_botao = fonte_botao.render("REINICIAR", 1, cores["branca"])
+    tela.blit(texto_botao, texto_botao.get_rect(center=botao_restart.center))
+
+def reiniciar_jogo():
+    bola.x, bola.y = 400, 300
+    jogador.x = 400 - largura_jogador // 2
+    veloc_bola[:] = [1, -1]
+    blocos[:] = criar_blocos(qtd_blocos_linha, qtd_linhas_blocos)
+
 desenhar_inicio_jogo()
 blocos = criar_blocos(qtd_blocos_linha, qtd_linhas_blocos)
+
 #desenhar as coisas na tela_______________________________________
 
 
@@ -143,17 +180,18 @@ while fim_de_jogo == False:
                 elif estado_jogo == "pausado":
                     estado_jogo = "jogando"
 
-        if estado_jogo == "jogando":
-            movimento_jogador(evento)
-
-    #movimento_jogador(evento)
+        #clique no botão de reiniciar (só existe fora do "jogando")
+        if evento.type == pygame.MOUSEBUTTONDOWN and estado_jogo != "jogando":
+            if botao_restart.collidepoint(evento.pos):
+                reiniciar_jogo()
+                estado_jogo = "jogando"
 
     if estado_jogo == "jogando":
         desenhar_inicio_jogo()
         desenhar_blocos(blocos)
         venceu = atualizar_pontuacao(qtd_total_blocos - len(blocos))
 
-        #movimento_jogador(evento)
+        movimento_jogador()
         movimento_bola = movimentar_bola(bola)
 
         if movimento_bola == None:
@@ -165,7 +203,8 @@ while fim_de_jogo == False:
     elif estado_jogo == "pausado":
         fonte_pause = pygame.font.Font(None, 60)
         texto_pause = fonte_pause.render("JOGO PAUSADO", 1, cores["branca"])
-        tela.blit(texto_pause, (tamanho_tela[0]//2 - 160, tamanho_tela[1]//2))
+        tela.blit(texto_pause, texto_pause.get_rect(center=(tamanho_tela[0]//2, tamanho_tela[1]//2 + 20)))
+        desenhar_botao_restart()
 
     elif estado_jogo == "derrota":
         tela.fill(cores["preto"])
@@ -175,14 +214,16 @@ while fim_de_jogo == False:
 
         texto_fim = fonte_grande.render("FIM DE JOGO", 1, cores["vermelho"])
         texto_pontos = fonte_media.render(f"Pontuação: {qtd_total_blocos - len(blocos)}", 1, cores["amarelo"])
-        tela.blit(texto_fim, (tamanho_tela[0]//2 - 180, tamanho_tela[1]//2 - 60))
-        tela.blit(texto_pontos, (tamanho_tela[0]//2 - 160, tamanho_tela[1]//2 + 20))
+        tela.blit(texto_fim, texto_fim.get_rect(center=(tamanho_tela[0]//2, tamanho_tela[1]//2 - 35)))
+        tela.blit(texto_pontos, texto_pontos.get_rect(center=(tamanho_tela[0]//2, tamanho_tela[1]//2 + 40)))
+        desenhar_botao_restart()
 
     elif estado_jogo == "vitoria":
         tela.fill(cores["verde"])
         fonte_grande = pygame.font.Font(None, 80)
         texto_vitoria = fonte_grande.render("VOCÊ VENCEU!", 1, cores["amarelo"])
-        tela.blit(texto_vitoria, (tamanho_tela[0]//2 - 200, tamanho_tela[1]//2 - 40))
+        tela.blit(texto_vitoria, texto_vitoria.get_rect(center=(tamanho_tela[0]//2, tamanho_tela[1]//2 - 15)))
+        desenhar_botao_restart()
 
 
     #tempo para rodar a atualização do jogo, a cada 1 milisegundo
